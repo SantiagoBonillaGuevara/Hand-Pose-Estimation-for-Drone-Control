@@ -1,5 +1,5 @@
 path,pose_id,pose,condition,index,split
-ThumbsUp/thumbsUp_blackLight.mp4,7,thumbsUp,blackLight,1,train
+ThumbsUp/thumbsUp_backLight.mp4,7,thumbsUp,backLight,1,train
 ThumbsUp/thumbsUp_closeUpHands.mp4,7,thumbsUp,closeUpHands,2,train
 ThumbsUp/thumbsUp_diag45Angle.mp4,7,thumbsUp,diag45Angle,3,train
 ThumbsUp/thumbsUp_flickeringLight.mp4,7,thumbsUp,flickeringLight,4,train
@@ -19,7 +19,7 @@ ThumbsUp/thumbsUp_sideShadows.mp4,7,thumbsUp,sideShadows,17,val
 ThumbsUp/thumbsUp_topAngle.mp4,7,thumbsUp,topAngle,18,test
 ThumbsUp/thumbsUp_virtualBackground.mp4,7,thumbsUp,virtualBackground,19,test
 ThumbsUp/thumbsUp_wideShot.mp4,7,thumbsUp,wideShot,20,test
-OpenPalm/openPalm_blackLight.mp4,3,openPalm,blackLight,1,train
+OpenPalm/openPalm_backLight.mp4,3,openPalm,backLight,1,train
 OpenPalm/openPalm_closeUpHands.mp4,3,openPalm,closeUpHands,2,train
 OpenPalm/openPalm_diag45Angle.mp4,3,openPalm,diag45Angle,3,train
 OpenPalm/openPalm_flickeringLight.mp4,3,openPalm,flickeringLight,4,train
@@ -39,7 +39,7 @@ OpenPalm/openPalm_sideShadows.mp4,3,openPalm,sideShadows,17,val
 OpenPalm/openPalm_topAngle.mp4,3,openPalm,topAngle,18,test
 OpenPalm/openPalm_virtualBackground.mp4,3,openPalm,virtualBackground,19,test
 OpenPalm/openPalm_wideShot.mp4,3,openPalm,wideShot,20,test
-Pinch/pinch_blackLight.mp4,7,pinch,blackLight,1,train
+Pinch/pinch_backLight.mp4,7,pinch,backLight,1,train
 Pinch/pinch_closeUpHands.mp4,7,pinch,closeUpHands,2,train
 Pinch/pinch_diag45Angle.mp4,7,pinch,diag45Angle,3,train
 Pinch/pinch_flickeringLight.mp4,7,pinch,flickeringLight,4,train
@@ -59,7 +59,7 @@ Pinch/pinch_sideShadows.mp4,7,pinch,sideShadows,17,val
 Pinch/pinch_topAngle.mp4,7,pinch,topAngle,18,test
 Pinch/pinch_virtualBackground.mp4,7,pinch,virtualBackground,19,test
 Pinch/pinch_wideShot.mp4,7,pinch,wideShot,20,test
-PointToDirection/point_blackLight.mp4,3,point,blackLight,1,train
+PointToDirection/point_backLight.mp4,3,point,backLight,1,train
 PointToDirection/point_closeUpHands.mp4,3,point,closeUpHands,2,train
 PointToDirection/point_diag45Angle.mp4,3,point,diag45Angle,3,train
 PointToDirection/point_flickeringLight.mp4,3,point,flickeringLight,4,train
