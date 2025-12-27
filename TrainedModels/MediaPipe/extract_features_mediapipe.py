@@ -3,29 +3,25 @@ import cv2
 import numpy as np
 import pandas as pd
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
 # ==================== PATHS BASADOS EN EL SCRIPT ====================
 
-# Directorio donde está este script: .../TrainedModels/MediaPipe
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Raíz del repo: subimos dos niveles desde MediaPipe -> TrainedModels -> raíz
 PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
-
-# Carpeta CollectedData en la raíz del repo
 DATA_DIR = os.path.join(PROJECT_ROOT, "CollectedData")
 
 # ==================== CONFIG ====================
 
 CSV_PATH = os.path.join(DATA_DIR, "dataset.csv")
-VIDEOS_BASE_DIR = DATA_DIR  # aquí están ThumbsUp/, etc.
+VIDEOS_BASE_DIR = DATA_DIR
 
 MAX_FRAMES = 48
 NUM_LANDMARKS = 21
 FEAT_DIM = NUM_LANDMARKS * 3
 FRAME_STRIDE = 1
 
-# Carpeta de salida = mismo directorio donde está el script
 OUTPUT_DIR = SCRIPT_DIR
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -52,7 +48,7 @@ def sample_or_pad(sequence, max_frames, feat_dim):
         return np.vstack([seq, pad])
 
 
-def extract_sequence_from_video(video_path, hands):
+def extract_sequence_from_video(video_path, landmarker):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"[WARN] No se pudo abrir el video: {video_path}")
@@ -70,14 +66,19 @@ def extract_sequence_from_video(video_path, hands):
             frame_idx += 1
             continue
 
+        # Convertir frame a formato MediaPipe Image
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(frame_rgb)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        
+        # Detectar landmarks
+        detection_result = landmarker.detect(mp_image)
 
-        if results.multi_hand_landmarks:
-            hand_landmarks = results.multi_hand_landmarks[0]
+        # Verificar si hay manos detectadas
+        if detection_result.hand_landmarks:
+            hand_landmarks = detection_result.hand_landmarks[0]
             features = []
-            for lm in hand_landmarks.landmark:
-                features.extend([lm.x, lm.y, lm.z])
+            for landmark in hand_landmarks:
+                features.extend([landmark.x, landmark.y, landmark.z])
             if len(features) == FEAT_DIM:
                 sequence.append(features)
 
@@ -102,15 +103,19 @@ def main():
     X_val, y_val = [], []
     X_test, y_test = [], []
 
-    mp_hands = mp.solutions.hands
-
-    with mp_hands.Hands(
-        static_image_mode=False,
-        max_num_hands=1,
-        min_detection_confidence=0.5,
+    # Configurar HandLandmarker con Tasks API
+    base_options = python.BaseOptions(
+        model_asset_path='hand_landmarker.task'  # Descarga este modelo
+    )
+    options = vision.HandLandmarkerOptions(
+        base_options=base_options,
+        num_hands=1,
+        min_hand_detection_confidence=0.5,
+        min_hand_presence_confidence=0.5,
         min_tracking_confidence=0.5
-    ) as hands:
+    )
 
+    with vision.HandLandmarker.create_from_options(options) as landmarker:
         for row in df.itertuples():
             rel_path = row.path
             pose = row.pose
@@ -121,7 +126,7 @@ def main():
 
             print(f"Procesando: {video_path}  | pose={pose}  | split={split}")
 
-            seq = extract_sequence_from_video(video_path, hands)
+            seq = extract_sequence_from_video(video_path, landmarker)
 
             if split == "train":
                 X_train.append(seq)
@@ -146,7 +151,6 @@ def main():
     print("  X_val:",   X_val.shape,   "y_val:",   y_val.shape)
     print("  X_test:",  X_test.shape,  "y_test:",  y_test.shape)
 
-    # === Guardar archivos en el MISMO directorio del script ===
     np.savez(os.path.join(OUTPUT_DIR, "mediapipe_train.npz"),
              X=X_train, y=y_train, label_names=label_names)
 
