@@ -5,6 +5,7 @@ from collections import deque
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from scipy import interpolate
 
 # ================= CONFIG =================
 
@@ -13,7 +14,7 @@ HAND_MODEL = "./TrainedModels/MediaPipe/hand_landmarker.task"
 
 MAX_FRAMES = 48
 NUM_LANDMARKS = 21
-FEAT_DIM = NUM_LANDMARKS * 3
+FEAT_DIM = NUM_LANDMARKS * 3  # 63
 
 # ================= CARGAR MODELO =================
 
@@ -35,18 +36,114 @@ options = vision.HandLandmarkerOptions(
     min_tracking_confidence=0.5
 )
 
-# ================= HELPERS =================
+# ================= FEATURE EXTRACTION =================
 
-def extract_features(X_seq):
-    """
-    X_seq: (48, 63)
-    return: (252,)
-    """
+def extract_angular_features(X):
+    angular_features_list = []
+
+    for seq in X:
+        T = seq.shape[0]
+        n_landmarks = seq.shape[1] // 3
+
+        x_center, y_center = [], []
+
+        for t in range(T):
+            x_coords = seq[t, 0::3]
+            y_coords = seq[t, 1::3]
+            x_center.append(np.mean(x_coords))
+            y_center.append(np.mean(y_coords))
+
+        x_center = np.array(x_center)
+        y_center = np.array(y_center)
+
+        angles = []
+        for i in range(1, len(x_center)):
+            dx = x_center[i] - x_center[i - 1]
+            dy = y_center[i] - y_center[i - 1]
+            angles.append(np.arctan2(dy, dx))
+
+        if len(angles) < 2:
+            angular_features_list.append([0, 0, 0, 0, 0, 0, 0])
+            continue
+
+        angles = np.array(angles)
+        angle_diffs = np.diff(angles)
+        angle_diffs = np.arctan2(np.sin(angle_diffs), np.cos(angle_diffs))
+
+        total_rotation = np.sum(angle_diffs)
+        mean_angular_velocity = np.mean(angle_diffs)
+        std_angular_velocity = np.std(angle_diffs)
+
+        cumulative_angle = np.cumsum(angle_diffs)
+        max_rotation = np.max(np.abs(cumulative_angle))
+
+        direction_consistency = (
+            np.sum(np.sign(angle_diffs) == np.sign(total_rotation)) / len(angle_diffs)
+            if total_rotation != 0 else 0
+        )
+
+        rotation_range = np.max(cumulative_angle) - np.min(cumulative_angle)
+        direction_changes = np.sum(np.diff(np.sign(angle_diffs)) != 0)
+
+        angular_features_list.append([
+            total_rotation,
+            mean_angular_velocity,
+            std_angular_velocity,
+            max_rotation,
+            direction_consistency,
+            rotation_range,
+            direction_changes
+        ])
+
+    return np.array(angular_features_list)
+
+
+def extract_velocity_features(X):
+    velocity_features_list = []
+
+    for seq in X:
+        velocities = np.diff(seq, axis=0)
+
+        if len(velocities) == 0:
+            velocity_features_list.append([0, 0, 0, 0])
+            continue
+
+        mean_velocity = np.mean(np.abs(velocities))
+        max_velocity = np.max(np.abs(velocities))
+
+        if len(velocities) > 1:
+            accelerations = np.diff(velocities, axis=0)
+            mean_acceleration = np.mean(np.abs(accelerations))
+            max_acceleration = np.max(np.abs(accelerations))
+        else:
+            mean_acceleration = 0
+            max_acceleration = 0
+
+        velocity_features_list.append([
+            mean_velocity,
+            max_velocity,
+            mean_acceleration,
+            max_acceleration
+        ])
+
+    return np.array(velocity_features_list)
+
+
+def extract_features(X):
+    statistical_features = np.hstack([
+        X.mean(axis=1),
+        X.std(axis=1),
+        X.max(axis=1),
+        X.min(axis=1)
+    ])
+
+    angular_features = extract_angular_features(X)
+    velocity_features = extract_velocity_features(X)
+
     return np.hstack([
-        X_seq.mean(axis=0),
-        X_seq.std(axis=0),
-        X_seq.max(axis=0),
-        X_seq.min(axis=0)
+        statistical_features,
+        angular_features,
+        velocity_features
     ])
 
 # ================= MAIN =================
@@ -81,13 +178,15 @@ with vision.HandLandmarker.create_from_options(options) as landmarker:
 
         if len(sequence_buffer) == MAX_FRAMES:
             X_seq = np.array(sequence_buffer, dtype=np.float32)
-            X_feat = extract_features(X_seq).reshape(1, -1)
+            X_feat = extract_features(X_seq[np.newaxis, :, :])
             X_feat = scaler.transform(X_feat)
 
-            pred = model.predict(X_feat)[0]
-            gesture = label_names[pred]
+            probs = model.predict_proba(X_feat)[0]
+            best_idx = np.argmax(probs)
+            confidence = probs[best_idx]
 
-        # ================= UI =================
+            gesture = label_names[best_idx] if confidence > 0.3 else "Unknown"
+            
         cv2.putText(
             frame,
             f"Gesture: {gesture}",
