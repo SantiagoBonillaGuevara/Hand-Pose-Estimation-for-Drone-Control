@@ -27,10 +27,13 @@ def main():
         while True:
             g = input("Gesto ID> ")
             if g == "q":
-                break
+                if state.is_flying:
+                    print("aterriza primero para salir")
+                else:
+                    break
             if g.isdigit():
                 handle_gesture(int(g), drone)
-                print("current state: ",state.current_state)
+                #print("current state: ",state.current_state)
     finally:
         running_event.clear()
         drone.disconnect()

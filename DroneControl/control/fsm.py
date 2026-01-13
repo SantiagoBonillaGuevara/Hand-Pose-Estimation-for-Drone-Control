@@ -14,7 +14,7 @@ def control_loop(drone):
             state = st.current_state
 
         if state == DroneState.HOVER:
-            print("stop")
+            #print("stop")
             drone(PCMD(0, 0, 0, 0, 0, 0))
 
         elif state == DroneState.MOVE_FORWARD:
