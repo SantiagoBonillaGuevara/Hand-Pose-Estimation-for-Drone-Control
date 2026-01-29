@@ -894,5 +894,3 @@ The emphasis on **modularity, safety constraints, and real-time feasibility** ma
 In conclusion, the project successfully bridges **computer vision, machine learning, and real-time control**, delivering a functional and extensible gesture-based drone control system that balances **technical rigor with practical applicability**.
 
 > ✅ The system proves that sophisticated human-drone interaction can be achieved with accessible technology, opening pathways for future research and real-world deployment.
-
----
