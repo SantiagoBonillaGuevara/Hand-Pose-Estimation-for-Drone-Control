@@ -1,6 +1,12 @@
 from enum import Enum
 import threading
 from threading import Event
+from queue import Queue
+
+running_event = threading.Event()
+running_event.set()
+
+gesture_queue = Queue()
 
 class DroneState(Enum):
     IDLE = 0

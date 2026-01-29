@@ -155,7 +155,7 @@ def extract_features(X):
     angular_features = extract_angular_features(X)
     velocity_features = extract_velocity_features(X)
     distance_features = extract_distance_features(X)
-    return np.hstack([statistical_features, angular_features, velocity_features, distance_features])
+    return np.hstack([statistical_features, angular_features, velocity_features, distance_features ])
 
 # ======================
 # Load dataset
