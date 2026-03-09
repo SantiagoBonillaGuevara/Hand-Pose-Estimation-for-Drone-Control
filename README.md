@@ -1,4 +1,5 @@
 # Hand Pose Estimation for Drone Control
+<img width="1366" height="768" alt="Captura desde 2026-03-09 03-02-17" src="https://github.com/user-attachments/assets/4eb76aaf-643a-43be-bc5f-d34b013279c4" />
 
 # 1. Project Purpose
 
@@ -894,3 +895,4 @@ The emphasis on **modularity, safety constraints, and real-time feasibility** ma
 In conclusion, the project successfully bridges **computer vision, machine learning, and real-time control**, delivering a functional and extensible gesture-based drone control system that balances **technical rigor with practical applicability**.
 
 > ✅ The system proves that sophisticated human-drone interaction can be achieved with accessible technology, opening pathways for future research and real-world deployment.
+
